@@ -1,0 +1,520 @@
+{
+  "openapi": "3.1.0",
+  "info": {
+    "title": "PolyGate Workshop 1 \u2014 Badminton Booking Mock APIs",
+    "description": "A standalone teaching sample with synthetic data. All dates and times are local to Hong Kong. Use U1 as a mock user; user_id is not authentication. No real PolyU system or LLM is contacted. Start with GET /courts/B01, check availability, create a booking, then view U1's bookings.",
+    "version": "1.0.0"
+  },
+  "paths": {
+    "/courts/{court_id}": {
+      "get": {
+        "tags": [
+          "Courts"
+        ],
+        "summary": "Get court details",
+        "description": "Find the court name and location. Shared by both business workflows.",
+        "operationId": "get_court_details",
+        "parameters": [
+          {
+            "name": "court_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "maxLength": 64,
+              "pattern": "^[A-Za-z0-9][A-Za-z0-9_-]*$",
+              "title": "Court Id"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Court"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "The court does not exist."
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/availability": {
+      "get": {
+        "tags": [
+          "Bookings"
+        ],
+        "summary": "Check availability",
+        "description": "Check one court, date and time range. This query does not reserve the court. A booking ending exactly at the requested start time does not overlap.",
+        "operationId": "check_availability",
+        "parameters": [
+          {
+            "name": "court_id",
+            "in": "query",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "minLength": 1,
+              "maxLength": 64,
+              "pattern": "^[A-Za-z0-9][A-Za-z0-9_-]*$",
+              "description": "Court identifier, for example B01.",
+              "title": "Court Id"
+            },
+            "description": "Court identifier, for example B01."
+          },
+          {
+            "name": "date",
+            "in": "query",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "pattern": "^[0-9]{4}-[0-9]{2}-[0-9]{2}$",
+              "description": "Local calendar date, YYYY-MM-DD (Hong Kong time).",
+              "title": "Date"
+            },
+            "description": "Local calendar date, YYYY-MM-DD (Hong Kong time)."
+          },
+          {
+            "name": "start_time",
+            "in": "query",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "pattern": "^(?:[01][0-9]|2[0-3]):[0-5][0-9]$",
+              "description": "Start time, HH:MM, inclusive.",
+              "title": "Start Time"
+            },
+            "description": "Start time, HH:MM, inclusive."
+          },
+          {
+            "name": "end_time",
+            "in": "query",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "pattern": "^(?:[01][0-9]|2[0-3]):[0-5][0-9]$",
+              "description": "End time, HH:MM, exclusive, on the same date.",
+              "title": "End Time"
+            },
+            "description": "End time, HH:MM, exclusive, on the same date."
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Availability"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "The court does not exist."
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/bookings": {
+      "post": {
+        "tags": [
+          "Bookings"
+        ],
+        "summary": "Create a booking",
+        "description": "Reserve a court for the requested time. All five fields are required. Availability is checked again inside the write transaction. On conflict, no booking is added. For a freshly initialized sample, the slide example creates BK-001.",
+        "operationId": "create_booking",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/BookingRequest"
+              },
+              "example": {
+                "user_id": "U1",
+                "court_id": "B01",
+                "date": "2026-11-05",
+                "start_time": "18:00",
+                "end_time": "19:00"
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/BookingCreated"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "The court does not exist."
+          },
+          "409": {
+            "description": "An existing booking overlaps."
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      },
+      "get": {
+        "tags": [
+          "Bookings"
+        ],
+        "summary": "View my bookings",
+        "description": "Return bookings for a synthetic user. An unused user ID returns an empty list. To check booking time and location, read these records then call Get court details.",
+        "operationId": "view_my_bookings",
+        "parameters": [
+          {
+            "name": "user_id",
+            "in": "query",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "minLength": 1,
+              "maxLength": 64,
+              "pattern": "^[A-Za-z0-9][A-Za-z0-9_-]*$",
+              "title": "User Id"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Bookings"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    }
+  },
+  "components": {
+    "schemas": {
+      "Availability": {
+        "properties": {
+          "court_id": {
+            "type": "string",
+            "maxLength": 64,
+            "minLength": 1,
+            "pattern": "^[A-Za-z0-9][A-Za-z0-9_-]*$",
+            "title": "Court Id",
+            "description": "Court identifier, for example B01."
+          },
+          "date": {
+            "type": "string",
+            "pattern": "^[0-9]{4}-[0-9]{2}-[0-9]{2}$",
+            "title": "Date",
+            "description": "Local calendar date, YYYY-MM-DD (Hong Kong time)."
+          },
+          "start_time": {
+            "type": "string",
+            "pattern": "^(?:[01][0-9]|2[0-3]):[0-5][0-9]$",
+            "title": "Start Time",
+            "description": "Start time, HH:MM, inclusive."
+          },
+          "end_time": {
+            "type": "string",
+            "pattern": "^(?:[01][0-9]|2[0-3]):[0-5][0-9]$",
+            "title": "End Time",
+            "description": "End time, HH:MM, exclusive, on the same date."
+          },
+          "available": {
+            "type": "boolean",
+            "title": "Available"
+          }
+        },
+        "additionalProperties": false,
+        "type": "object",
+        "required": [
+          "court_id",
+          "date",
+          "start_time",
+          "end_time",
+          "available"
+        ],
+        "title": "Availability"
+      },
+      "Booking": {
+        "properties": {
+          "court_id": {
+            "type": "string",
+            "maxLength": 64,
+            "minLength": 1,
+            "pattern": "^[A-Za-z0-9][A-Za-z0-9_-]*$",
+            "title": "Court Id",
+            "description": "Court identifier, for example B01."
+          },
+          "date": {
+            "type": "string",
+            "pattern": "^[0-9]{4}-[0-9]{2}-[0-9]{2}$",
+            "title": "Date",
+            "description": "Local calendar date, YYYY-MM-DD (Hong Kong time)."
+          },
+          "start_time": {
+            "type": "string",
+            "pattern": "^(?:[01][0-9]|2[0-3]):[0-5][0-9]$",
+            "title": "Start Time",
+            "description": "Start time, HH:MM, inclusive."
+          },
+          "end_time": {
+            "type": "string",
+            "pattern": "^(?:[01][0-9]|2[0-3]):[0-5][0-9]$",
+            "title": "End Time",
+            "description": "End time, HH:MM, exclusive, on the same date."
+          },
+          "user_id": {
+            "type": "string",
+            "maxLength": 64,
+            "minLength": 1,
+            "pattern": "^[A-Za-z0-9][A-Za-z0-9_-]*$",
+            "title": "User Id",
+            "description": "Synthetic classroom identity, e.g. U1; not authentication."
+          },
+          "booking_id": {
+            "type": "string",
+            "maxLength": 64,
+            "minLength": 1,
+            "pattern": "^[A-Za-z0-9][A-Za-z0-9_-]*$",
+            "title": "Booking Id"
+          }
+        },
+        "additionalProperties": false,
+        "type": "object",
+        "required": [
+          "court_id",
+          "date",
+          "start_time",
+          "end_time",
+          "user_id",
+          "booking_id"
+        ],
+        "title": "Booking"
+      },
+      "BookingCreated": {
+        "properties": {
+          "booking_id": {
+            "type": "string",
+            "maxLength": 64,
+            "minLength": 1,
+            "pattern": "^[A-Za-z0-9][A-Za-z0-9_-]*$",
+            "title": "Booking Id"
+          },
+          "status": {
+            "type": "string",
+            "const": "confirmed",
+            "title": "Status",
+            "default": "confirmed"
+          }
+        },
+        "additionalProperties": false,
+        "type": "object",
+        "required": [
+          "booking_id"
+        ],
+        "title": "BookingCreated"
+      },
+      "BookingRequest": {
+        "properties": {
+          "court_id": {
+            "type": "string",
+            "maxLength": 64,
+            "minLength": 1,
+            "pattern": "^[A-Za-z0-9][A-Za-z0-9_-]*$",
+            "title": "Court Id",
+            "description": "Court identifier, for example B01."
+          },
+          "date": {
+            "type": "string",
+            "pattern": "^[0-9]{4}-[0-9]{2}-[0-9]{2}$",
+            "title": "Date",
+            "description": "Local calendar date, YYYY-MM-DD (Hong Kong time)."
+          },
+          "start_time": {
+            "type": "string",
+            "pattern": "^(?:[01][0-9]|2[0-3]):[0-5][0-9]$",
+            "title": "Start Time",
+            "description": "Start time, HH:MM, inclusive."
+          },
+          "end_time": {
+            "type": "string",
+            "pattern": "^(?:[01][0-9]|2[0-3]):[0-5][0-9]$",
+            "title": "End Time",
+            "description": "End time, HH:MM, exclusive, on the same date."
+          },
+          "user_id": {
+            "type": "string",
+            "maxLength": 64,
+            "minLength": 1,
+            "pattern": "^[A-Za-z0-9][A-Za-z0-9_-]*$",
+            "title": "User Id",
+            "description": "Synthetic classroom identity, e.g. U1; not authentication."
+          }
+        },
+        "additionalProperties": false,
+        "type": "object",
+        "required": [
+          "court_id",
+          "date",
+          "start_time",
+          "end_time",
+          "user_id"
+        ],
+        "title": "BookingRequest"
+      },
+      "Bookings": {
+        "properties": {
+          "bookings": {
+            "items": {
+              "$ref": "#/components/schemas/Booking"
+            },
+            "type": "array",
+            "title": "Bookings"
+          }
+        },
+        "additionalProperties": false,
+        "type": "object",
+        "required": [
+          "bookings"
+        ],
+        "title": "Bookings"
+      },
+      "Court": {
+        "properties": {
+          "court_id": {
+            "type": "string",
+            "maxLength": 64,
+            "minLength": 1,
+            "pattern": "^[A-Za-z0-9][A-Za-z0-9_-]*$",
+            "title": "Court Id"
+          },
+          "name": {
+            "type": "string",
+            "maxLength": 120,
+            "minLength": 1,
+            "title": "Name"
+          },
+          "location": {
+            "type": "string",
+            "maxLength": 120,
+            "minLength": 1,
+            "title": "Location"
+          }
+        },
+        "additionalProperties": false,
+        "type": "object",
+        "required": [
+          "court_id",
+          "name",
+          "location"
+        ],
+        "title": "Court"
+      },
+      "HTTPValidationError": {
+        "properties": {
+          "detail": {
+            "items": {
+              "$ref": "#/components/schemas/ValidationError"
+            },
+            "type": "array",
+            "title": "Detail"
+          }
+        },
+        "type": "object",
+        "title": "HTTPValidationError"
+      },
+      "ValidationError": {
+        "properties": {
+          "loc": {
+            "items": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "integer"
+                }
+              ]
+            },
+            "type": "array",
+            "title": "Location"
+          },
+          "msg": {
+            "type": "string",
+            "title": "Message"
+          },
+          "type": {
+            "type": "string",
+            "title": "Error Type"
+          },
+          "input": {
+            "title": "Input"
+          },
+          "ctx": {
+            "type": "object",
+            "title": "Context"
+          }
+        },
+        "type": "object",
+        "required": [
+          "loc",
+          "msg",
+          "type"
+        ],
+        "title": "ValidationError"
+      }
+    }
+  }
+}

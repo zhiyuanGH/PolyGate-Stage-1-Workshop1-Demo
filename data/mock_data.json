@@ -1,0 +1,10 @@
+{
+  "courts": [
+    {"court_id": "B01", "name": "Badminton Court 1", "location": "Demo Hall"},
+    {"court_id": "B02", "name": "Badminton Court 2", "location": "Demo Hall"}
+  ],
+  "bookings": [
+    {"booking_id": "BK-000", "user_id": "U2", "court_id": "B01", "date": "2026-11-05", "start_time": "16:00", "end_time": "17:00"},
+    {"booking_id": "BK-009", "user_id": "U3", "court_id": "B02", "date": "2026-11-05", "start_time": "15:00", "end_time": "16:00"}
+  ]
+}

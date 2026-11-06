@@ -1,0 +1,34 @@
+@baseUrl = http://127.0.0.1:8000
+
+### 1. Get court details (shared by both business tasks)
+GET {{baseUrl}}/courts/B01
+
+### 2. Check availability before creating the example booking
+GET {{baseUrl}}/availability?court_id=B01&date=2026-11-05&start_time=18:00&end_time=19:00
+
+### 3. Create a booking: 201 on fresh data; repeating it gives 409
+POST {{baseUrl}}/bookings
+Content-Type: application/json
+
+{
+  "user_id": "U1",
+  "court_id": "B01",
+  "date": "2026-11-05",
+  "start_time": "18:00",
+  "end_time": "19:00"
+}
+
+### 4. View the mock user's bookings; use the court_id to look up location
+GET {{baseUrl}}/bookings?user_id=U1
+
+### Invalid input: 422; must not create a booking
+POST {{baseUrl}}/bookings
+Content-Type: application/json
+
+{
+  "user_id": "U1",
+  "court_id": "B01",
+  "date": "2026-11-05",
+  "start_time": "18:00",
+  "end_time": "17:00"
+}

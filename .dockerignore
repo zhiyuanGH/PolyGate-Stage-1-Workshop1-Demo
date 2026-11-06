@@ -1,0 +1,7 @@
+*
+!requirements.txt
+!constraints.txt
+!booking_demo/
+!booking_demo/*.py
+!data/
+!data/mock_data.json

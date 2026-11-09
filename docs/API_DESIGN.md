@@ -205,7 +205,7 @@ Use this short test sequence:
 | Retrieve U1's bookings and then B01's details. | `200` for both requests. | No changes. The response supplies the saved time and court location. |
 | Use an end time earlier than the start time. | `422 Unprocessable Entity`. | No additional booking. |
 
-To reset, stop the server, run `python -m booking_demo reset --yes`, then restart it. Resetting discards local demo changes and reloads the seed.
+To restore the practice records, follow the reset steps for your operating system in the [English guide](../README.md#if-you-get-stuck) or [中文指南](../START_HERE_zh.md#遇到问题怎么办).
 
 The live script in `scripts/demo.py` uses fixed HTTP calls. It demonstrates these API workflows without an LLM. A later agent could choose and call the same APIs after understanding a user's request.
 

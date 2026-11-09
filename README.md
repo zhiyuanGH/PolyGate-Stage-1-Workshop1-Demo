@@ -1,7 +1,5 @@
 # PolyGate Stage 1 Workshop 1 · Badminton court booking demo
 
-[中文入门指南](START_HERE_zh.md)
-
 Imagine a student asks, “Can I book court B01 from 6 to 7 pm?” You’ll use a browser to make the same calls an agent could make: find the court, check the time, book it, and look up the reservation. Everything runs on your computer with fictional records. You can do the exercise without writing code or signing in.
 
 ## 1. Open the demo on your computer
